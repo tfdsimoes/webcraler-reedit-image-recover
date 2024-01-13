@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 base_url = 'https://www.reddit.com'
 community_url = base_url + '/r/SpanishMeme/'
 total_images = 0
+total_images_to_recover = 60
 max_number_processor_images = 6
 path_images_directory = 'images'
 posts = []
@@ -57,7 +58,7 @@ prepare_directory_images(path_images_directory)
 # Load initial page
 page = retrieve_page(community_url)
 
-while len(posts) < 100:
+while len(posts) < total_images_to_recover:
     soup = BeautifulSoup(page.text, 'html.parser')
     posts.extend(soup.find_all('shreddit-post'))
 
@@ -68,6 +69,7 @@ while len(posts) < 100:
     print(f"Next url to load: {load_more_url}")
     page = retrieve_page(load_more_url)
 
+posts.reverse() # new posts fist
 threads = []
 for i in range(max_number_processor_images):
     thread = threading.Thread(target=process_posts)

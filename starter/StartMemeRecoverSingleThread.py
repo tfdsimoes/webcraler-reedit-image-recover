@@ -43,7 +43,7 @@ def prepare_directory_images(images_directory):
 base_url = 'https://www.reddit.com'
 community_url = base_url + '/r/SpanishMeme/'
 total_images = 0
-total_images_to_recover = 10
+total_images_to_recover = 40
 path_images_directory = 'images'
 
 prepare_directory_images(path_images_directory)
