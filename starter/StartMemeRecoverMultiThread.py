@@ -55,7 +55,7 @@ def recover_posts_by_date():
         soup = BeautifulSoup(page.text, 'html.parser')
         posts.extend(soup.find_all('shreddit-post'))
 
-        post_date = posts[0]['created-timestamp']
+        post_date = posts[len(posts) - 1]['created-timestamp']
 
         if post_date < last_time_run:
             break
