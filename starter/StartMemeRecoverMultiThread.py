@@ -1,12 +1,15 @@
 import os
-import psutil
-import requests
 import re
 import sys
 import threading
-
 from datetime import datetime
+
+import psutil
+import requests
 from bs4 import BeautifulSoup
+
+import io
+from PIL import Image
 
 regex_date = r"\d{4}-\d{2}-\d{2}"
 date_format_argument = "%Y-%m-%d"
@@ -56,8 +59,12 @@ def retrieve_page(page_url):
 def download_image(image_url, counter):
     image_content = requests.get(image_url).content
 
-    with open("images/" + str(counter) + ".jpg", "wb") as image_file:
-        image_file.write(image_content)
+    try:
+        Image.open(io.BytesIO(image_content))
+        with open("images/" + str(counter) + ".jpg", "wb") as image_file:
+            image_file.write(image_content)
+    except IOError:
+        print(f"Failed to process meme {counter} - not an image")
 
 
 def recover_posts_by_date():
