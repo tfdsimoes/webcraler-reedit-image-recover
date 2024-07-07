@@ -1,3 +1,6 @@
+# DEPRECATED
+# Prototype for the MultiThread version ... no longer used
+
 import os
 import requests
 from bs4 import BeautifulSoup
