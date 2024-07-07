@@ -122,18 +122,49 @@ def process_posts():
 
 
 # Check if it will process by date or total images
+# --option total $number_images
+# --option date $date
+# --help
 if len(sys.argv) >= 2:
-    start_argument = sys.argv[1]
-    if start_argument.isdigit():
-        print(f"Recovering {start_argument} images")
-        total_images_to_recover = int(start_argument)
-        recover_posts_by_total_images()
-        process_type = "total"
-    elif re.fullmatch(regex_date, start_argument):
-        print(f"Recovering images from {start_argument}")
-        filter_date_posts = datetime.strptime(start_argument, date_format_argument)
-        recover_posts_by_date()
-        process_type = "date"
+    option = sys.argv[1]
+    if option == "--help":
+        print("Usage: python StartMemeRecoverMultiThread.py [option] [value]")
+        print("Options:")
+        print("  --option total $number_images")
+        print("  --option date $date")
+        print("  --help")
+        sys.exit(0)
+
+    if option == "--option":
+        if len(sys.argv) < 4:
+            print("Error: Missing value for option")
+            sys.exit(1)
+
+        value = sys.argv[3]
+        if sys.argv[2] == "total":
+            if value.isdigit():
+                print(f"Recovering {value} images")
+                total_images_to_recover = int(value)
+                recover_posts_by_total_images()
+                process_type = "total"
+            else:
+                print("Error: Invalid value for total option")
+                sys.exit(1)
+        elif sys.argv[2] == "date":
+            if re.fullmatch(regex_date, value):
+                print(f"Recovering images from {value}")
+                filter_date_posts = datetime.strptime(value, date_format_argument)
+                recover_posts_by_date()
+                process_type = "date"
+            else:
+                print("Error: Invalid value for date option")
+                sys.exit(1)
+        else:
+            print("Error: Invalid option")
+            sys.exit(1)
+    else:
+        print("Error: Invalid option")
+        sys.exit(1)
 else:
     print(f"Recovering {default_images_to_recover} images by default")
     total_images_to_recover = default_images_to_recover
