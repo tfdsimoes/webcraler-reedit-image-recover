@@ -1,15 +1,14 @@
+import io
 import os
 import re
 import sys
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import psutil
 import requests
-from bs4 import BeautifulSoup
-
-import io
 from PIL import Image
+from bs4 import BeautifulSoup
 
 regex_date = r"\d{4}-\d{2}-\d{2}"
 date_format_argument = "%Y-%m-%d"
@@ -18,6 +17,7 @@ base_url = "https://www.reddit.com"
 community_url = base_url + "/r/SpanishMeme/"
 
 default_images_to_recover = 70
+default_time_to_recover = 1
 total_images_to_recover = None
 filter_date_posts = None
 
@@ -121,43 +121,62 @@ def process_posts():
         download_image(post['content-href'], number_image)
 
 
-# Check if it will process by date or total images
-# --option total $number_images
-# --option date $date
-# --help
-if len(sys.argv) >= 2:
-    option = sys.argv[1]
-    if option == "--help":
-        print("Usage: python StartMemeRecoverMultiThread.py [option] [value]")
-        print("Options:")
-        print("  --option total $number_images")
-        print("  --option date $date")
-        print("  --help")
-        sys.exit(0)
+def process_options(args):
+    # Check if it will process by date or total images
+    # --option total $number_images
+    # --option date $date
+    # --help
+    global process_type
+    global total_images_to_recover
+    global filter_date_posts
 
-    if option == "--option":
-        if len(sys.argv) < 4:
-            print("Error: Missing value for option")
-            sys.exit(1)
+    if len(sys.argv) >= 2:
+        option = sys.argv[1]
+        if option == "--help":
+            print("Usage: python MemeRecover.py [option] [value]")
+            print("Options:")
+            print(f"  --option total $number_images (default {default_images_to_recover})", )
+            print(f"  --option date $date (default {default_time_to_recover} weeks)", )
+            print("  --help")
+            sys.exit(0)
 
-        value = sys.argv[3]
-        if sys.argv[2] == "total":
-            if value.isdigit():
-                print(f"Recovering {value} images")
-                total_images_to_recover = int(value)
-                recover_posts_by_total_images()
+        if option == "--option":
+            if sys.argv[2] == "total":
                 process_type = "total"
-            else:
-                print("Error: Invalid value for total option")
-                sys.exit(1)
-        elif sys.argv[2] == "date":
-            if re.fullmatch(regex_date, value):
-                print(f"Recovering images from {value}")
-                filter_date_posts = datetime.strptime(value, date_format_argument)
-                recover_posts_by_date()
+
+                if len(sys.argv) < 4:
+                    total_images_to_recover = default_images_to_recover
+                    print(f"Recovering {total_images_to_recover} images")
+                    recover_posts_by_total_images()
+
+                else:
+                    value = sys.argv[3]
+                    if value.isdigit():
+                        total_images_to_recover = int(value)
+                        print(f"Recovering {total_images_to_recover} images")
+                        recover_posts_by_total_images()
+                    else:
+                        print("Error: Invalid value for total option")
+                        sys.exit(1)
+
+            elif sys.argv[2] == "date":
                 process_type = "date"
+                if len(sys.argv) < 4:
+                    time_now = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                    filter_date_posts = time_now - timedelta(weeks=default_time_to_recover)
+                    print(f"Recovering images until date {filter_date_posts}")
+                    recover_posts_by_date()
+                else:
+                    value = sys.argv[3]
+                    if re.fullmatch(regex_date, value):
+                        filter_date_posts = datetime.strptime(value, date_format_argument)
+                        print(f"Recovering images until date {filter_date_posts}")
+                        recover_posts_by_date()
+                    else:
+                        print("Error: Invalid value for date option")
+                        sys.exit(1)
             else:
-                print("Error: Invalid value for date option")
+                print("Error: Invalid option")
                 sys.exit(1)
         else:
             print("Error: Invalid option")
@@ -165,11 +184,8 @@ if len(sys.argv) >= 2:
     else:
         print("Error: Invalid option")
         sys.exit(1)
-else:
-    print(f"Recovering {default_images_to_recover} images by default")
-    total_images_to_recover = default_images_to_recover
-    recover_posts_by_total_images()
-    process_type = "total"
+
+process_options(sys.argv)
 
 # Clean the directory to store the images
 prepare_directory_images(path_images_directory)
